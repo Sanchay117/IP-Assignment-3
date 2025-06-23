@@ -54,7 +54,9 @@ def create_renders(args):
             # HINT: Set bg_colour to (1.0, 1.0, 1.0)
             # HINT: Get per_splat from args.gaussians_per_splat
             # HINT: img_size and camera are available above
-            img, depth, mask = None
+            bg_colour = (1.0, 1.0, 1.0)
+            per_splat = args.gaussians_per_splat
+            img, depth, mask = scene.render(camera, per_splat, img_size, bg_colour)
 
         debug_path = os.path.join(debug_root, f"{i:03d}.png")
         img = img.detach().cpu().numpy()
@@ -107,7 +109,7 @@ def get_args():
             "memory consumption."
         )
     )
-    parser.add_argument("--device", default="cuda", type=str, choices=["cuda", "cpu"])
+    parser.add_argument("--device", default="cpu", type=str, choices=["cuda", "cpu"])
     args = parser.parse_args()
     return args
 
