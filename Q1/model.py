@@ -246,16 +246,6 @@ class Gaussians:
         # HINT: You can use a function from pytorch3d to convert quaternions to rotation matrices.
         else:
 
-            ### YOUR CODE HERE ###
-            # # Convert quaternions to rotation matrices: (N, 4) -> (N, 3, 3)
-            # R = quaternion_to_matrix(quats)  # (N, 3, 3)
-
-            # # scales: (N, 3), create diagonal matrices
-            # S = torch.diag_embed(scales)  # (N, 3, 3)
-
-            # # Compute cov = R @ S^2 @ R^T
-            # S_squared = S @ S  # (N, 3, 3)
-            # cov_3D = R @ S_squared @ R.transpose(1, 2)  # (N, 3, 3)
             R = quaternion_to_matrix(quats)      # (N, 3, 3)
             S = torch.diag_embed(scales)         # (N, 3, 3)
             S_st = S @ S.transpose(1, 2)         # (N, 3, 3), compute S S^T
@@ -484,18 +474,18 @@ class Scene:
 
         ### YOUR CODE HERE ###
         # HINT: Can you find a function in this file that can help?
-        cov_2D_inverse = None  # (N, 2, 2) TODO: Verify shape
+        cov_2D_inverse = self.gaussians.invert_cov_2D(cov_2D)  # (N, 2, 2) TODO: Verify shape
 
         ### YOUR CODE HERE ###
         # HINT: Can you find a function in this file that can help?
-        power = None  # (N, H*W)
+        power = self.gaussians.evaluate_gaussian_2D(points_2D,means_2D,cov_2D_inverse)  # (N, H*W)
 
         # Computing exp(power) with some post processing for numerical stability
         exp_power = torch.where(power > 0.0, 0.0, torch.exp(power))
 
         ### YOUR CODE HERE ###
         # HINT: Refer to README for a relevant equation.
-        alphas = None  # (N, H*W)
+        alphas = opacities*exp_power  # (N, H*W)
         alphas = torch.reshape(alphas, (-1, H, W))  # (N, H, W)
 
         # Post processing for numerical stability
@@ -547,7 +537,7 @@ class Scene:
 
         ### YOUR CODE HERE ###
         # HINT: Refer to README for a relevant equation.
-        transmittance = None  # (N, H, W)
+        transmittance = torch.cumprod(one_minus_alphas, dim=0)[:-1, :, :]  # (N, H, W)
 
         # Post processing for numerical stability
         transmittance = torch.where(transmittance < 1e-4, 0.0, transmittance)  # (N, H, W)
