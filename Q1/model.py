@@ -328,11 +328,7 @@ class Gaussians:
         # HINT: Do note that means_2D have units of pixels. Hence, you must apply a
         # transformation that moves points in the world space to screen space.
         
-        # Step 1: Convert 3D world coordinates to NDC [-1, 1]
-        means_ndc = camera.transform_points_screen(means_3D, image_size=img_size, with_xyflip=False)  # (N, 3)
-
-        # Step 2: Drop depth (Z); return (x, y) in pixel space
-        means_2D = means_ndc[:, :2]  # (N, 2)
+        means_2D = camera.transform_points_screen(means_3D)[:, :2]  # (N, 2)
 
         return means_2D
 
@@ -381,7 +377,15 @@ class Gaussians:
         """
         ### YOUR CODE HERE ###
         # HINT: Refer to README for a relevant equation
-        power = None  # (N, H*W)
+        # Compute (x - mu): broadcasted
+        diff = points_2D - means_2D  # (N, H*W, 2)
+
+        # Compute: diff @ cov_inv => (N, H*W, 2)
+        cov_inv_diff = torch.matmul(diff, cov_2D_inverse)  # (N, H*W, 2)
+
+        # Final dot product: (x - mu)^T @ cov_inv @ (x - mu)
+        # Result: sum over last dim (2) ⇒ scalar per point
+        power = -0.5 * torch.sum(cov_inv_diff * diff, dim=-1)  # (N, H*W)
 
         return power
 
