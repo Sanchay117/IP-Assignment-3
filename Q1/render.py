@@ -109,7 +109,7 @@ def get_args():
             "memory consumption."
         )
     )
-    parser.add_argument("--device", default="cpu", type=str, choices=["cuda", "cpu"])
+    parser.add_argument("--device", default="cuda", type=str, choices=["cuda", "cpu"])
     args = parser.parse_args()
     return args
 

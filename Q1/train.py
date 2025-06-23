@@ -82,6 +82,10 @@ def run_training(args):
     make_trainable(gaussians)
     optimizer = setup_optimizer(gaussians)
 
+    gt_img, _, _ = next(iter(train_loader))
+    img_size = gt_img.shape[1:-1]
+    l1_loss = torch.nn.L1Loss()
+
     # Training loop
     viz_frames = []
     for itr in range(args.num_itrs):
@@ -107,12 +111,14 @@ def run_training(args):
         # HINT: Get img_size from train_dataset
         # HINT: Get per_splat from args.gaussians_per_splat
         # HINT: camera is available above
-        pred_img = None
+        bg_colour = (0.0, 0.0, 0.0)
+        per_splat = args.gaussians_per_splat
+        pred_img, _, _ = scene.render(camera, per_splat, img_size, bg_colour)
 
         # Compute loss
         ### YOUR CODE HERE ###
         # HINT: A simple standard loss function should work.
-        loss = None
+        loss = l1_loss(pred_img, gt_img)
 
         loss.backward()
         optimizer.step()
@@ -154,7 +160,9 @@ def run_training(args):
             # HINT: Get img_size from train_dataset
             # HINT: Get per_splat from args.gaussians_per_splat
             # HINT: camera is available above
-            pred_img = None
+            bg_colour = (0.0, 0.0, 0.0)
+            per_splat = args.gaussians_per_splat
+            pred_img, _, _ = scene.render(camera, per_splat, img_size, bg_colour)
 
         pred_npy = pred_img.detach().cpu().numpy()
         pred_npy = (np.clip(pred_npy, 0.0, 1.0) * 255.0).astype(np.uint8)
@@ -182,7 +190,9 @@ def run_training(args):
             # HINT: Get img_size from test_dataset
             # HINT: Get per_splat from args.gaussians_per_splat
             # HINT: camera is available above
-            pred_img = None
+            bg_colour = (0.0, 0.0, 0.0)
+            per_splat = args.gaussians_per_splat
+            pred_img, _, _ = scene.render(camera, per_splat, img_size, bg_colour)
 
             gt_npy = gt_img.detach().cpu().numpy()
             pred_npy = pred_img.detach().cpu().numpy()
