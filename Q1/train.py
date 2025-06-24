@@ -37,7 +37,6 @@ def setup_optimizer(gaussians):
         {'params': [gaussians.means], 'lr': 0.0005, "name": "means"},
     ]
     optimizer = torch.optim.Adam(parameters, lr=0.0, eps=1e-15)
-    optimizer = None
 
     return optimizer
 
@@ -83,7 +82,7 @@ def run_training(args):
     optimizer = setup_optimizer(gaussians)
 
     gt_img, _, _ = next(iter(train_loader))
-    img_size = gt_img.shape[1:-1]
+    img_size = gt_img[0].shape[:2]
     l1_loss = torch.nn.L1Loss()
 
     # Training loop
@@ -101,6 +100,7 @@ def run_training(args):
 
         gt_img = gt_img[0].cuda()
         camera = camera[0].cuda()
+        
         if gt_mask is not None:
             gt_mask = gt_mask[0].cuda()
 
@@ -118,6 +118,7 @@ def run_training(args):
         # Compute loss
         ### YOUR CODE HERE ###
         # HINT: A simple standard loss function should work.
+        pred_img = pred_img.permute(1, 0, 2)
         loss = l1_loss(pred_img, gt_img)
 
         loss.backward()
@@ -193,6 +194,8 @@ def run_training(args):
             bg_colour = (0.0, 0.0, 0.0)
             per_splat = args.gaussians_per_splat
             pred_img, _, _ = scene.render(camera, per_splat, img_size, bg_colour)
+
+            pred_img = pred_img.permute(1, 0, 2)
 
             gt_npy = gt_img.detach().cpu().numpy()
             pred_npy = pred_img.detach().cpu().numpy()
