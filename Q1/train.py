@@ -82,7 +82,8 @@ def run_training(args):
     optimizer = setup_optimizer(gaussians)
 
     gt_img, _, _ = next(iter(train_loader))
-    img_size = gt_img[0].shape[:2]
+    img_size = gt_img[0].shape[:2] # (90,160) [H,W] -> scene.render requires [W,H]
+    img_size = tuple(reversed(img_size))
     l1_loss = torch.nn.L1Loss()
 
     # Training loop
@@ -118,7 +119,6 @@ def run_training(args):
         # Compute loss
         ### YOUR CODE HERE ###
         # HINT: A simple standard loss function should work.
-        pred_img = pred_img.permute(1, 0, 2)
         loss = l1_loss(pred_img, gt_img)
 
         loss.backward()
@@ -194,8 +194,6 @@ def run_training(args):
             bg_colour = (0.0, 0.0, 0.0)
             per_splat = args.gaussians_per_splat
             pred_img, _, _ = scene.render(camera, per_splat, img_size, bg_colour)
-
-            pred_img = pred_img.permute(1, 0, 2)
 
             gt_npy = gt_img.detach().cpu().numpy()
             pred_npy = pred_img.detach().cpu().numpy()
