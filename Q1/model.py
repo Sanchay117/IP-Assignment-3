@@ -437,10 +437,19 @@ class Scene:
         """
         ### YOUR CODE HERE ###
         
-        positive_depth = z_vals >= 0.0
-        idxs = torch.argsort(positive_depth).to(dtype=torch.int64)  # (N,)
+        # Step 1: Find indices of valid (non-negative) depth values
+        valid_idxs = torch.nonzero(z_vals >= 0.0, as_tuple=False).squeeze(-1)  # shape (N,)
 
-        return idxs
+        # Step 2: Extract corresponding depth values
+        valid_z_vals = z_vals[valid_idxs]  # shape (N,)
+
+        # Step 3: Sort those by depth
+        sorted_order = torch.argsort(valid_z_vals)  # shape (N,)
+
+        # Step 4: Get final indices in original array
+        idxs = valid_idxs[sorted_order]
+
+        return idxs.to(dtype=torch.int64)
 
     def compute_alphas(self, opacities, means_2D, cov_2D, img_size):
         """
